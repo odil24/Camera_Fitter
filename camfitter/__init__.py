@@ -1,9 +1,8 @@
 bl_info = {
     "name": "Camera Fitter",
     "author": "Odilkhan Yakubov",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (2, 80, 0),
-    "location": "View3D > Sidebar > Camera Fitter",
     "category": "Camera",
     "description": "Align and fit camera lens as in 3D View",
 }
