@@ -2,7 +2,6 @@ import bpy
 import math
 from bpy.types import Operator, Panel
 
-
 class VIEW3D_OT_camera_fit_view(Operator):
     """Align and fit camera to view and match lens properties."""
     bl_idname = "view3d.camera_fit_view"
@@ -18,6 +17,7 @@ class VIEW3D_OT_camera_fit_view(Operator):
         if context.scene.camera is None:
             bpy.ops.object.camera_add()
             new_camera = context.object
+            new_camera.name = "3D View Camera"  # Set camera name
             context.scene.camera = new_camera
         else:
             new_camera = context.scene.camera
@@ -63,28 +63,10 @@ class VIEW3D_OT_camera_fit_view(Operator):
         render.resolution_x = int(width * scale)
         render.resolution_y = int(height * scale)
 
+        # Start rendering
+        bpy.ops.render.render("INVOKE_DEFAULT", write_still=True)
+
         return {'FINISHED'}
-
-
-class VIEW3D_PT_camera_fit_view_panel(Panel):
-    bl_label = "Camera Fitter"
-    bl_idname = "VIEW3D_PT_camera_fit_view_panel"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Camera"
-    bl_context = "objectmode"
-
-    def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        fit_view_settings = scene.camera_fit_view_settings
-
-        #row = layout.row()
-        #row.prop(fit_view_settings, "custom_lens", text="View Lens (mm)")
-
-        row = layout.row()
-        row.operator("view3d.camera_fit_view", text="Fitting Camera")
-
 
 class CameraFitViewSettings(bpy.types.PropertyGroup):
     custom_lens: bpy.props.FloatProperty(
@@ -94,26 +76,39 @@ class CameraFitViewSettings(bpy.types.PropertyGroup):
         update=lambda self, context: update_lens(self, context)
     )
 
-
 def update_lens(self, context):
     cam = context.scene.camera
     if cam is not None:
         cam.data.lens = self.custom_lens
 
+addon_keymaps = []
 
 def register():
     bpy.utils.register_class(VIEW3D_OT_camera_fit_view)
-    bpy.utils.register_class(VIEW3D_PT_camera_fit_view_panel)
     bpy.utils.register_class(CameraFitViewSettings)
     bpy.types.Scene.camera_fit_view_settings = bpy.props.PointerProperty(type=CameraFitViewSettings)
 
+    # Register shortcut keymap
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc:
+        km = kc.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new('view3d.camera_fit_view', 'F10', 'PRESS', ctrl=True)
+
+        addon_keymaps.append((km, kmi))
 
 def unregister():
     bpy.utils.unregister_class(VIEW3D_OT_camera_fit_view)
-    bpy.utils.unregister_class(VIEW3D_PT_camera_fit_view_panel)
     bpy.utils.unregister_class(CameraFitViewSettings)
     del bpy.types.Scene.camera_fit_view_settings
 
+    # Unregister shortcut keymap
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    if kc:
+        for km, kmi in addon_keymaps:
+            km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
 
 if __name__ == "__main__":
     register()
