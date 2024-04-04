@@ -63,6 +63,9 @@ class VIEW3D_OT_camera_fit_view(Operator):
         render.resolution_x = int(width * scale)
         render.resolution_y = int(height * scale)
 
+        # Set passepartout alpha
+        new_camera.data.passepartout_alpha = 1.0
+
         # Start rendering
         bpy.ops.render.render("INVOKE_DEFAULT", write_still=True)
 
